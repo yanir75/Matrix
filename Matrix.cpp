@@ -30,22 +30,18 @@ zich::Matrix zich::Matrix::operator+(const zich::Matrix &matrix) {
         throw std::invalid_argument("mat size is different");
     }
     zich::Matrix ans(mat,row,col);
-    for(unsigned int i=0;i<mat.size();i++){
-        ans.mat[i]+=matrix.mat[i];
-    }
+    ans+=matrix;
     return ans;
 }
 
 zich::Matrix zich::Matrix::operator+(double add) {
     zich::Matrix ans(mat,row,col);
-    for(double &i:ans.mat){
-        i+=add;
-    }
+    ans+=add;
     return ans;
 }
 
 zich::Matrix &zich::Matrix::operator++() {
-    *this = *this+1;
+    *this +=1;
     return *this;
 }
 
@@ -56,12 +52,20 @@ zich::Matrix zich::Matrix::operator++(int ind) {
 }
 
 zich::Matrix zich::Matrix::operator+=(const zich::Matrix& matrix) {
-    *this = *this+matrix;
+
+    if(row!=matrix.row || col!=matrix.col){
+        throw std::invalid_argument("mat size is different");
+    }
+    for(unsigned int i=0;i<mat.size();i++){
+        mat[i]+=matrix.mat[i];
+    }
     return *this;
 }
 
 zich::Matrix zich::Matrix::operator+=(double add) {
-    *this = *this+add;
+    for(double &i:mat){
+        i+=add;
+    }
     return *this;
 }
 
@@ -76,30 +80,33 @@ zich::Matrix zich::Matrix::operator-(const zich::Matrix &matrix) {
         throw std::invalid_argument("mat size is different");
     }
     zich::Matrix ans(mat,row,col);
-    for(unsigned int i=0;i<mat.size();i++){
-        ans.mat[i]-=matrix.mat[i];
-    }
+    ans-=matrix;
     return ans;
 }
 
 zich::Matrix &zich::Matrix::operator--() {
-    *this = *this -1;
+    *this += -1;
     return *this;
 }
 
 zich::Matrix zich::Matrix::operator--(int sub) {
     zich::Matrix ans(mat,row,col);
-    *this=*this-1;
+    *this+=-1;
     return ans;
 }
 
 zich::Matrix zich::Matrix::operator-=(const zich::Matrix& matrix) {
-    *this = *this-matrix;
+    if(row!=matrix.row || col!=matrix.col){
+        throw std::invalid_argument("mat size is different");
+    }
+    for(unsigned int i=0;i<mat.size();i++){
+        mat[i]-=matrix.mat[i];
+    }
     return *this;
 }
 
 zich::Matrix zich::Matrix::operator-=(double sub) {
-    *this = *this-sub;
+    *this+=-sub;
     return *this;
 }
 /**
@@ -114,17 +121,8 @@ zich::Matrix zich::Matrix::operator*(const zich::Matrix &matrix) const {
         throw std::invalid_argument("mat size is different");
     }
     // 3x3 3x2 3x2
-    double res=0;
     zich::Matrix ans(0,row,matrix.col);
-    for (unsigned int k = 0; k <matrix.col ;k++) {
-        for (unsigned int i = 0; i < row; i++) {
-            for (unsigned int j = 0; j < col; j++) {
-                res+= get_ind(i,j)*matrix.get_ind(j,k);
-            }
-            ans.set(i,k,res);
-            res=0;
-        }
-    }
+    ans*=matrix;
     return ans;
 }
 
@@ -138,9 +136,7 @@ void zich::Matrix::set(unsigned int i, unsigned int j,double value) {
 
 zich::Matrix zich::Matrix::operator*(double mult) {
     zich::Matrix ans(mat,row,col);
-    for(double &i:ans.mat){
-        i=i*mult;
-    }
+    ans*=mult;
     return ans;
 }
 
@@ -173,7 +169,10 @@ zich::Matrix zich::operator*(double mult, zich::Matrix &matrix) {
 
 
 zich::Matrix zich::Matrix::operator*=(double mult) {
-    *this =*this*mult;
+
+    for(double &i:mat){
+        i=i*mult;
+    }
     return *this;
 }
 
@@ -267,6 +266,26 @@ std::istream &zich::operator>>(std::istream &stream, zich::Matrix &matrix) {
 
     return stream;
 }
+
+zich::Matrix zich::Matrix::operator*=(const zich::Matrix &matrix) {
+    if(col!=matrix.row){
+        throw std::invalid_argument("mat size is different");
+    }
+    // 3x3 3x2 3x2
+    double res=0;
+    for (unsigned int k = 0; k <matrix.col ;k++) {
+        for (unsigned int i = 0; i < row; i++) {
+            for (unsigned int j = 0; j < col; j++) {
+                res+= get_ind(i,j)*matrix.get_ind(j,k);
+            }
+            set(i,k,res);
+            res=0;
+        }
+    }
+    return *this;
+}
+
+
 zich::Matrix::Matrix() = default;
 
 

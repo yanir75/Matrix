@@ -31,6 +31,7 @@ namespace zich{
         Matrix operator *(double mult);
         //
         Matrix operator *=(double mult);
+        Matrix operator *=(const Matrix& matrix);
 
         Matrix operator ()(const Matrix& matrix) const;
         Matrix operator ()(double mult);
