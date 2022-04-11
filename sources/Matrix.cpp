@@ -4,7 +4,18 @@
 #include <string>
 
 
-zich::Matrix::Matrix(std::vector<double> matrix, unsigned int row, unsigned int col) :mat(row*col) {
+zich::Matrix::Matrix(std::vector<double> matrix,  int row,  int col) :mat((unsigned int)row*(unsigned int)col) {
+    if(matrix.size()!= row*col || row<0 || col <0){
+        throw std::invalid_argument("Matrix size is not right");
+    }
+    this->row = (unsigned int) row;
+    this->col = (unsigned int) col;
+    for(unsigned int i=0;i<matrix.size();i++){
+        mat[i]=matrix[i];
+    }
+}
+
+zich::Matrix::Matrix(std::vector<double> matrix,  unsigned int row,  unsigned int col) :mat(row*col) {
     if(matrix.size()!= row*col){
         throw std::invalid_argument("Matrix size is not right");
     }
@@ -14,7 +25,6 @@ zich::Matrix::Matrix(std::vector<double> matrix, unsigned int row, unsigned int 
         mat[i]=matrix[i];
     }
 }
-
 zich::Matrix::Matrix(double value, unsigned int row, unsigned int col): mat(row*col) {
     this->row = row;
     this->col = col;
@@ -122,7 +132,20 @@ zich::Matrix zich::Matrix::operator*(const zich::Matrix &matrix) const {
     }
     // 3x3 3x2 3x2
     zich::Matrix ans(0,row,matrix.col);
-    ans*=matrix;
+    if(col!=matrix.row){
+        throw std::invalid_argument("mat size is different");
+    }
+    // 3x3 3x2 3x2
+    double res=0;
+    for (unsigned int k = 0; k <matrix.col ;k++) {
+        for (unsigned int i = 0; i < row; i++) {
+            for (unsigned int j = 0; j < col; j++) {
+                res+= get_ind(i,j)*matrix.get_ind(j,k);
+            }
+            ans.set(i,k,res);
+            res=0;
+        }
+    }
     return ans;
 }
 
@@ -150,11 +173,19 @@ zich::Matrix zich::Matrix::operator()(double mult) {
 
 std::ostream &zich::operator<<(std::ostream &os, const zich::Matrix &matrix) {
     for(unsigned int i=0;i<matrix.row;i++){
-        os << '[';
+        os << "[";
         for (unsigned int j = 0; j < matrix.col; j++) {
-            os << matrix.get_ind(i,j) << " ";
+            os << matrix.get_ind(i, j);
+            if (j != matrix.col - 1) {
+                os << " ";
+            }
         }
-        os << "]\n";
+        if(i!=matrix.row-1) {
+            os << "]\n";
+        }
+        else{
+            os << "]";
+        }
     }
     return os;
 }
@@ -185,16 +216,22 @@ double zich::Matrix::sum() const {
 }
 
 bool zich::Matrix::operator>(const zich::Matrix &matrix) const {
+    if(row!=matrix.row || col!=matrix.col){
+        throw std::invalid_argument("not the same size");
+    }
     return this->sum() > matrix.sum();
 }
 
 bool zich::Matrix::operator<(const zich::Matrix &matrix) const {
+    if(row!=matrix.row || col!=matrix.col){
+        throw std::invalid_argument("not the same size");
+    }
     return this->sum() < matrix.sum();
 }
 
 bool zich::Matrix::operator==(const zich::Matrix &matrix) const{
-    if(col !=matrix.col || row != matrix.row){
-        return false;
+    if(row!=matrix.row || col!=matrix.col){
+        throw std::invalid_argument("not the same size");
     }
     for(unsigned int i=0;i<mat.size();i++){
         if(mat[i]!=matrix.mat[i]){
@@ -209,7 +246,7 @@ bool zich::Matrix::operator>=(const zich::Matrix &matrix) const {
 }
 
 bool zich::Matrix::operator<=(const zich::Matrix &matrix) const {
-    return *this < matrix || *this >matrix;
+    return *this < matrix || *this ==matrix;
 }
 
 zich::Matrix zich::operator+(zich::Matrix &matrix) {
@@ -240,15 +277,33 @@ std::vector<std::string> split(std::string s, char delim){
     }
     return splited;
 }
-
+void validate(std::string mat){
+    bool t = true;
+    for(unsigned int i=0;i<mat.length()-1;i++){
+        if(mat[i]=='[' && (mat[i+1]<'0' || mat[i+1]>'9') && mat[i+1]!=' ' && t){
+            throw std::invalid_argument("invalid string");
+        }
+        if(mat[i]==',' && mat[i+1]!=' '){
+            throw std::invalid_argument("invalid string");
+        }
+        if(mat[i]==']' && mat[i+1]!=','){
+            throw std::invalid_argument("invalid string");
+        }
+        if(mat[i]!=']' && mat[i]!='[' && mat[i]!=',' && mat[i]!=' ' && (mat[i]<'0' || mat[i]>'9') && mat[i]!='.'){
+            throw std::invalid_argument("invalid string");
+        }
+    }
+}
 
 std::istream &zich::operator>>(std::istream &stream, zich::Matrix &matrix) {
     std::string s;
     char ch=stream.get();
-    while(ch!='\n'){
+    matrix = Matrix();
+    while(ch!='\n' && ch!=-1){
         s+=ch;
         ch=stream.get();
     }
+    validate(s);
     std::vector<std::string > sa = split(s, ',');
     unsigned int size=0;
     for(auto & i : sa){
@@ -271,18 +326,12 @@ zich::Matrix zich::Matrix::operator*=(const zich::Matrix &matrix) {
     if(col!=matrix.row){
         throw std::invalid_argument("mat size is different");
     }
-    // 3x3 3x2 3x2
-    double res=0;
-    for (unsigned int k = 0; k <matrix.col ;k++) {
-        for (unsigned int i = 0; i < row; i++) {
-            for (unsigned int j = 0; j < col; j++) {
-                res+= get_ind(i,j)*matrix.get_ind(j,k);
-            }
-            set(i,k,res);
-            res=0;
-        }
-    }
+    *this = *this * matrix;
     return *this;
+}
+
+bool zich::Matrix::operator!=(const zich::Matrix &matrix) const {
+    return !(*this==matrix);
 }
 
 

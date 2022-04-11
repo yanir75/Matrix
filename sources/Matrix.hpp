@@ -9,6 +9,7 @@ namespace zich{
         std::vector<double> mat;
     public:
         // Constructor getting array and number of rows and cols
+        Matrix(std::vector<double> matrix,int row,int col);
         Matrix(std::vector<double> matrix,unsigned int row,unsigned int col);
         Matrix(double value,unsigned int row,unsigned int col);
         Matrix();
@@ -49,6 +50,7 @@ namespace zich{
         bool operator >(const Matrix& matrix) const;
         bool operator <(const Matrix& matrix) const;
         bool operator ==(const Matrix& matrix) const;
+        bool operator !=(const Matrix& matrix) const;
 
         bool operator >=(const Matrix& matrix) const;
         bool operator <=(const Matrix& matrix) const;
